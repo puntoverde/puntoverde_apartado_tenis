@@ -5,7 +5,7 @@ from apartados_dao import ApartadoDao
 def EspacioDeportivoView(page:ft.Page,params:Params,basket:Basket):
  
     espacio_deportivos=ApartadoDao.get_espacio_deportivo()
-    espacio_deportivos_map=map(lambda i:ft.Card(width=400,height=150,color=ft.colors.WHITE,content=ft.Container(on_click=lambda _: page.go("/equipos/%s" %i["cve_espacio_deportivo"]),content=ft.Row([
+    espacio_deportivos_map=map(lambda i:ft.Card(width=400,height=150,color=ft.Colors.WHITE,content=ft.Container(on_click=lambda _: page.go("/equipos/%s" %i["cve_espacio_deportivo"]),content=ft.Row([
         ft.Image(src=i["ruta_app"],width=100,),
         ft.Column(expand=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, 
                  controls=[
@@ -15,7 +15,7 @@ def EspacioDeportivoView(page:ft.Page,params:Params,basket:Basket):
         ])
     ]),padding=5),elevation=3),espacio_deportivos)
 
-    page.bgcolor=ft.colors.WHITE
+    page.bgcolor=ft.Colors.WHITE
     page.padding=20
     images = ft.Row(
         wrap=True,
@@ -27,7 +27,7 @@ def EspacioDeportivoView(page:ft.Page,params:Params,basket:Basket):
     content_=ft.Container(
         expand=True,
         width=page.window.width,
-        bgcolor=ft.colors.GREY_300,
+        bgcolor=ft.Colors.GREY_300,
         border_radius=30,
         padding=20,
         content=images

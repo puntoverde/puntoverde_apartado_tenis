@@ -17,7 +17,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
     equipo_apartados=ApartadoDao.get_equipo_apartado(params.id_equipo)
 
     espacio_deportivos_map=map(lambda i:
-                               ft.Card(width=400,height=150,color=ft.colors.WHITE,content=ft.Container(content=ft.Row([
+                               ft.Card(width=400,height=150,color=ft.Colors.WHITE,content=ft.Container(content=ft.Row([
         # ft.Image(src="images/raqueta-de-tenis.png",width=100,),
         ft.Image(src=i["ruta_app"],width=100,),
         ft.Column(expand=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, 
@@ -30,7 +30,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
     ]),padding=5)),equipo_apartados)
 
     
-    page.bgcolor=ft.colors.WHITE
+    page.bgcolor=ft.Colors.WHITE
     page.padding=20
     images = ft.Row(
         wrap=True,
@@ -54,7 +54,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
         equipo_find["fecha_inicio"]= fecha_inicio    
         equipo_find["fecha_fin"]= fecha_fin
 
-        card_equipo=ft.Card(width=400,height=150,color=ft.colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
+        card_equipo=ft.Card(width=400,height=150,color=ft.Colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
         ft.Image(src=equipo_find["ruta_app"],width=100,),
         ft.Column(expand=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, 
                  controls=[
@@ -78,7 +78,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
         equipo_find["fecha_inicio"]= fecha_inicio 	    
         equipo_find["fecha_fin"]= fecha_fin
 
-        card_equipo=ft.Card(width=400,height=150,color=ft.colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
+        card_equipo=ft.Card(width=400,height=150,color=ft.Colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
         ft.Image(src=equipo_find["ruta_app"],width=100,),
         ft.Column(expand=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, 
                  controls=[
@@ -103,7 +103,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
         equipo_find["fecha_inicio"]= fecha_inicio 	    
         equipo_find["fecha_fin"]= fecha_fin
 
-        card_equipo=ft.Card(width=400,height=150,color=ft.colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
+        card_equipo=ft.Card(width=400,height=150,color=ft.Colors.WHITE,content=ft.Container(on_click=lambda _:fnAddEquipo(equipo_find),content=ft.Row([
         ft.Image(src=equipo_find["ruta_app"],width=100,),
         ft.Column(expand=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER, 
                  controls=[
@@ -119,7 +119,7 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
 
     content_=ft.Container(
         expand=True,
-        bgcolor=ft.colors.GREY_200,
+        bgcolor=ft.Colors.GREY_200,
         border_radius=30,
         padding=20,
         content=images
@@ -132,12 +132,12 @@ def ApartadoEquiposDetalleView(page:ft.Page,params:Params,basket:Basket):
         leading_width=50,
         title=ft.Text("Apartado de equipos"),
         center_title=False,
-        bgcolor=ft.colors.GREEN,
+        bgcolor=ft.Colors.GREEN,
         actions=[],
     )
 
 
     return ft.View(
-        "equipos/:id_equipo/apartado",
+        "/equipos/:id_equipo/apartado",
         controls=[appbar_,content_]
     )

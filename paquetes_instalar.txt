@@ -1,0 +1,14 @@
+la version de python tiene que se Python 3.12.10 porque la 3.13 0 3.14 no se adaptan con tensorflow por el momento 
+por ende no sirve deepface
+
+pip install flet
+pip install flet_route
+pip install moment
+pip install playsound3
+pip install pydash
+pip install deepface
+pip install mysql-connector
+pip install tf-keras
+pip install cvzone
+pip install mediapipe
+pip install jpype1

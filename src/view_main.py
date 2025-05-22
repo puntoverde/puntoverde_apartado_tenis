@@ -30,11 +30,11 @@ def main(page: ft.Page):
 
 
     appbar_ = ft.AppBar(
-        leading=ft.Icon(ft.icons.HOME),
+        leading=ft.Icon(ft.Icons.HOME),
         leading_width=40,
         title=ft.Text("Apartado de equipos"),
         center_title=False,
-        bgcolor=ft.colors.SURFACE_VARIANT,
+        bgcolor=ft.Colors.ON_SURFACE_VARIANT,
         actions=[],
     )
 
@@ -52,7 +52,7 @@ def main(page: ft.Page):
     Routing(
         page=page, # Here you have to pass the page. Which will be found as a parameter in all your views
         app_routes=app_routes, # Here a list has to be passed in which we have defined app routing like app_routes
-        appbar=appbar_
+        # appbar=appbar_
         )
     
     page.go(page.route)

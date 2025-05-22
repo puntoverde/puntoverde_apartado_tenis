@@ -34,7 +34,7 @@ class ApartadoDao:
                         FROM espacio_deportivo
                         INNER JOIN imagenes ON espacio_deportivo.cve_imagen = imagenes.cve_imagen
                         INNER JOIN espacio_deportivo_horario ON espacio_deportivo_horario.cve_espacio_deortivo = espacio_deportivo.cve_espacio_deportivo
-                        WHERE espacio_deportivo.estatus = 1 AND espacio_deportivo.terminal IN (1) AND WEEKDAY(NOW()) = espacio_deportivo_horario.dia_semana  AND now() >= espacio_deportivo_horario.hora2 AND now() <= espacio_deportivo_horario.hora3
+                        WHERE espacio_deportivo.estatus = 1 AND espacio_deportivo.terminal IN (1) AND WEEKDAY(NOW()) = espacio_deportivo_horario.dia_semana  AND now() >= espacio_deportivo_horario.hora1 AND now() <= espacio_deportivo_horario.hora2
 
                        """)
                     
