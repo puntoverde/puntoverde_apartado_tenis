@@ -9,6 +9,7 @@ import time
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['WDM_LOG_LEVEL'] = '0'
 import sys
 
 import moment
@@ -27,6 +28,8 @@ from cvzone.FaceMeshModule import FaceMeshDetector#wrap de mediapipe
 from apartados_dao import ApartadoDao #"gestion de bd 
 import pydash #es como el lodash de javascript 
 import requests
+import views.apartado_equipos_view  # Here NextView is imported from views/next_view.py
+import views.espacios_deportivos_view
 
 #busca el path en un build
 def resourse_path(relative_path):
@@ -40,8 +43,8 @@ import jpype
 import jpype.imports
 
 # jpype.startJVM(classpath = ["C:\\java_huella\\dist\\prueba_puente_python.jar"])
-jpype.startJVM(classpath = ["./src/jar_huella/prueba_puente_python.jar"])
-# jpype.startJVM(classpath = [resourse_path("huella_/prueba_puente_python.jar")])
+# jpype.startJVM(classpath = ["./src/jar_huella/prueba_puente_python.jar"])
+jpype.startJVM(classpath = [resourse_path("huella_/prueba_puente_python.jar")])
 import java
 import javax
 from javax.swing import *
@@ -51,8 +54,8 @@ from prueba_puente_python import DigitalPersona
 
 # variable de guarda el estado de la camara
 # cap=None
-# cap=cv2.VideoCapture(0,cv2.CAP_DSHOW)
-cap=cv2.VideoCapture(0)
+cap=cv2.VideoCapture(0,cv2.CAP_DSHOW)
+# cap=cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
 # para iniciar el video, en un while indica que tiene que estar ciclando los fotogramas
@@ -80,17 +83,17 @@ num_intentos_facial=0
 
 #carga el play sound para dar gracias.
 def gracias():
-        playsound("./src/assets/sound/thank-you-168416.mp3",block=False)        
-        # playsound(resourse_path("assets/sound/thank-you-168416.mp3"),block=False)
+        # playsound("./src/assets/sound/thank-you-168416.mp3",block=False)        
+        playsound(resourse_path("assets/sound/thank-you-168416.mp3"),block=False)
 
 #es improvisado realizo una verificacion con los dos modelos que se utilizan para que antes que todo se descarguen los modelos
 def init_model():
     print("incia carga de los modelos")
 
-    # imagen1=cv2.imread(resourse_path("assets/images/img1.jpg"))
-    imagen1=cv2.imread("./src/assets/images/img1.jpg")
-    # imagen2=cv2.imread(resourse_path("assets/images/img2.jpg"))
-    imagen2=cv2.imread("./src/assets/images/img2.jpg")
+    imagen1=cv2.imread(resourse_path("assets/images/img1.jpg"))
+    # imagen1=cv2.imread("./src/assets/images/img1.jpg")
+    imagen2=cv2.imread(resourse_path("assets/images/img2.jpg"))
+    # imagen2=cv2.imread("./src/assets/images/img2.jpg")
     init_model=DeepFace.verify(img1_path=imagen1,img2_path=imagen2,model_name="VGG-Face",detector_backend="mediapipe",threshold=.55)
     print(init_model["distance"])
     print(init_model["verified"])
@@ -104,52 +107,63 @@ def init_model():
 threading.Thread(target=init_model).start()
 
 
-def LoginView(page:ft.Page,params:Params,basket:Basket):
+def LoginView(page:ft.Page,fv,equipo_,id_espacio):
+
+    print("inicia vista login")
+
+
+    def navigateApartados(e):
+        print("click datos... %s" %e)
+        
+        fv.view_go('apartado',history_debug=True,duration=400, mode="left")
+        fv.append("apartado",views.apartado_equipos_view.ApartadoEquiposDetalleView(page=page,fv=fv,id=e,id_espacio=id_espacio))
+
+    def navigateEspacio():
+        
+        fv.view_go('espacio_deportivo',history_debug=True,duration=400, mode="left")
+        fv.append("espacio_deportivo",views.espacios_deportivos_view.EspacioDeportivoView(page=page,fv=fv))
 
     # es una lista donde se guardaran temporalmente los socios
     lista_socios_validados=[]
-
-    print(basket.equipo)
-    id_equipo=basket.equipo["cve_equipo"]
-    nombre_equipo_=basket.equipo["nombre"]
-    descripcion_equipo_=basket.equipo["descripcion"]
-    tiempo_equipo_=basket.equipo["duracion_prestamo"]
-    fecha_inicio_equipo_=basket.equipo["fecha_inicio"]
-    fecha_fin_equipo_=basket.equipo["fecha_fin"]
-    min_socios_equipo_=basket.equipo["min_socios"]
+    
+    id_equipo=equipo_["cve_equipo"]
+    nombre_equipo_=equipo_["nombre"]
+    descripcion_equipo_=equipo_["descripcion"]
+    tiempo_equipo_=equipo_["duracion_prestamo"]
+    fecha_inicio_equipo_=equipo_["fecha_inicio"]
+    fecha_fin_equipo_=equipo_["fecha_fin"]
+    min_socios_equipo_=equipo_["min_socios"]
     nombre_text=""
 
     #propiedades de la ventana
     page.title = "Apartado Equipo Polideportivo"
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    # page.window.width=900
-    # page.window.height=900    
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER  
 
     #bottonsheet componente 
     bs = ft.Ref[ft.BottomSheet]()
 
     #controles que acceden a cierto campo
-    check_dobles=ft.Checkbox(label="Dobles",width=25,shape=ft.RoundedRectangleBorder(radius=5),visible=False)
+    check_dobles=ft.Checkbox(label="Dobles",width=180,shape=ft.RoundedRectangleBorder(radius=2),visible=False)
     if(min_socios_equipo_>1):
         check_dobles.visible=True
 
     #inicia la camara 
-    def init_camara(flag=1):
+    def init_camara():
         # global cap,init_video
         global init_video
         #se usa cv2.CAP_DSHOW por que la camara logitech lo necesitaba
         # cap=cv2.VideoCapture(0,cv2.CAP_DSHOW)
-        #se pone en fullHD
+        #se pone en fullHD---- esta linea se encuentra al inicio de este archivo porq se cambio a que la camara siempre este encendida
         # cap.set(cv2.CAP_PROP_FRAME_WIDTH,1280)
         # cap.set(cv2.CAP_PROP_FRAME_HEIGHT,720)
         init_video=True
         #while para estar leyendo los fotogramas
         while init_video:
-            fn_init_video(flag)
+            fn_init_video()
 
 
     #proceso de pintar y mostrar la imagen con los cambios de distancia y ovalo etc
-    def fn_init_video(flag):       
+    def fn_init_video():       
         ret,frame=cap.read()#lee el fotograma 
         frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)#pone el fotograma a bgr para que se vea correctamente 
         frame=cv2.flip(frame,1)# se pone como espejo
@@ -163,8 +177,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
 
         image_mask_ovalo=cv2.bitwise_and(frame,frame,mask=mask)  
 
-        # fondo=cv2.imread(resourse_path("assets/images/wp.jpeg"))
-        fondo=cv2.imread("./src/assets/images/wp.jpeg")
+        fondo=cv2.imread(resourse_path("assets/images/wp.jpeg"))
+        # fondo=cv2.imread("./src/assets/images/wp.jpeg")
         fondo=fondo[0:640,460:820]
         # imagen que muestra fuera del ovalo y lo convina con fondo para que se vea como opacidad
         image_mask_ovalo_inverso=cv2.addWeighted(frame,0.9,fondo,0.1,0)        
@@ -172,10 +186,7 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
         image_final_ovalo=cv2.add(image_mask_ovalo, image_mask_ovalo_inverso)
         
         #1 es que tiene foto y entra a validar
-        if flag==1:
-            visualizar(image_final_ovalo,frame)
-        #en caso contrario muetra para capturar foto y guardar
-        else: tomarRostro(image_final_ovalo,frame)
+        visualizar(image_final_ovalo,frame)
 
     def visualizar(imagen_,image_origin):
         global counter,is_valid_face
@@ -216,47 +227,6 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
         img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
         imagen_video.src_base64=img_str
         imagen_video.update() 
-
-    def tomarRostro(imagen_,image_origin):
-        global counter,is_valid_face
-        # busca un rostro con cvzone(mediapipe)
-        _,faces_cv_zone=detector_cvzone.findFaceMesh(imagen_,draw=False)
-        if faces_cv_zone:
-            # el primer rostro encontrado
-            face_=faces_cv_zone[0]
-            # ojo izq
-            pointLeft=face_[145]
-            # ojo der
-            pointRigth=face_[374]
-            #punto de la nariz
-            pointNose=face_[4] 
-            # proceso para calcular la distanca y guardar en variale d
-            w,_=detector_cvzone.findDistance(pointLeft,pointRigth)
-            W=6.3
-            f=840
-            d=(W*f)/w
-            cv2.circle(imagen_,pointNose,2,(250, 193, 19),cv2.FILLED)                             
-            cv2.line(imagen_,(180,320),(180,380),(250, 193, 19),1)
-            cv2.line(imagen_,(150,350),(210,350),(250, 193, 19),1)
-
-            # valida la distancia entre un rango de 40 a 70 cm de distancia y que la nariz este en el punto central mayor a 150 y menor a 210 en x y mayor a 320 y menor a 380b en y
-            if(d>35 and d<70 and pointNose[0]>150 and pointNose[0]<210 and pointNose[1]>320 and pointNose[1]<380):
-                #se pinta un rectangulo en la orilla de color amarilllo para indicar que se esta leyendo el rostro
-                imagen_=cv2.rectangle(imagen_,(0,0),(360,640),(250, 193, 19),30)
-                #inicia con la captura cada 30 segundos y siepre no este ya en proceso una verificacion
-                if counter % 30 == 0  and is_valid_face==False:
-                    # ejecuta el hilo para verificar pasandole la imagen original
-                    print("aqui guarda la imagen al socio...")         
-                    image_origin2=image_origin[50:540,0:460]#recorta solo esl centro de la camara y que se vea como celular         
-                    threading.Thread(target=guardar_rostro,kwargs={'frame':image_origin2}).start() 
-                counter=counter+1
-        #proceso para convertir la imagen a base64 y mostrarla 
-        im =ImagePil.fromarray(imagen_)
-        buffered = BytesIO()
-        im.save(buffered, format="JPEG")
-        img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
-        imagen_video.src_base64=img_str
-        imagen_video.update()
                 
 
     def setTextInput(e):
@@ -338,13 +308,13 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                        
                 try:
                     if(e=="VerificandoStart"):
-                        img = ImageIcon("./src/assets/images/fingerprint/finger_scan.png").getImage()
-                        # img = ImageIcon(resourse_path("assets/images/fingerprint/finger_scan.png")).getImage() 
+                        # img = ImageIcon("./src/assets/images/fingerprint/finger_scan.png").getImage()
+                        img = ImageIcon(resourse_path("assets/images/fingerprint/finger_scan.png")).getImage() 
                         newimg = img.getScaledInstance(230, 310,  java.awt.Image.SCALE_SMOOTH)
                         lblHuella.setIcon(ImageIcon(newimg))
                     elif(e=="VerificandoEnd"):
-                        img = ImageIcon("./src/assets/images/fingerprint/finger.png").getImage()
-                        # img = ImageIcon(resourse_path("assets/images/fingerprint/finger.png")).getImage()
+                        # img = ImageIcon("./src/assets/images/fingerprint/finger.png").getImage()
+                        img = ImageIcon(resourse_path("assets/images/fingerprint/finger.png")).getImage()
                         newimg = img.getScaledInstance(230, 310,  java.awt.Image.SCALE_SMOOTH)
                         lblHuella.setIcon(ImageIcon(newimg))
                     elif(e=="Verificar"):
@@ -355,8 +325,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                             
                             digitalPersona.stop()
 
-                            img = ImageIcon("./src/assets/images/fingerprint/finger_check.png").getImage()
-                            # img = ImageIcon(resourse_path("assets/images/fingerprint/finger_check.png")).getImage()
+                            # img = ImageIcon("./src/assets/images/fingerprint/finger_check.png").getImage()
+                            img = ImageIcon(resourse_path("assets/images/fingerprint/finger_check.png")).getImage()
                             newimg = img.getScaledInstance(230, 310,  java.awt.Image.SCALE_SMOOTH)
                             lblHuella.setIcon(ImageIcon(newimg))
 
@@ -382,11 +352,12 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                                 ApartadoDao.registrar_apartado(id_socio,id_equipo,tiempo_apartado,fecha_inicio_equipo_,fecha_fin_equipo_)                                
                                 audio=threading.Thread(target=gracias)
                                 audio.start()
-                                time.sleep(3)
+                                # time.sleep(3)
                                 print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                                 clear()
                                 page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))                              
-                                page.go("/")
+                                # page.go("/")
+                                navigateEspacio()
 
                             elif(maximo_socios==len(lista_socios_validados)):
                                 print("Registra el apatrado ucuando se cumplan los minimo de socios")
@@ -401,7 +372,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                                 print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                                 clear()                                
                                 page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))                              
-                                page.go("/")
+                                # page.go("/")
+                                navigateEspacio()
                             else:
                                 print("entra porq aun no se cumplen el total de socios...")
                                 clear()
@@ -418,8 +390,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                             page.open(ft.SnackBar(ft.Text("Tres intentos de validación fallidos",style=ft.TextStyle(size=60,color="#000000")),bgcolor="#FFB300",width=350,duration=3000))
                             
                         else:
-                            img = ImageIcon("./src/assets/images/fingerprint/finger_error.png").getImage()
-                            # img = ImageIcon(resourse_path("assets/images/fingerprint/finger_error.png")).getImage()
+                            # img = ImageIcon("./src/assets/images/fingerprint/finger_error.png").getImage()
+                            img = ImageIcon(resourse_path("assets/images/fingerprint/finger_error.png")).getImage()
                             newimg = img.getScaledInstance(230, 310,  java.awt.Image.SCALE_SMOOTH)
                             lblHuella.setIcon(ImageIcon(newimg))
                 except java.lang.Exception as ex:
@@ -429,6 +401,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
 
             huella_=ApartadoDao.get_huella(id_socio)
             digitalPersona=DigitalPersona(VerificacionHuella)
+            # al iniciar lo primero que tenemos que hacer es cerrar en caso de que se quedara abierto los listener del lector
+            digitalPersona.stop()
 
             #funciones
             frame = JFrame("Varificacion")
@@ -436,8 +410,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
             frame.setAlwaysOnTop(True)
             frame.setFocusableWindowState(True)
 
-            img = ImageIcon("./src/assets/images/fingerprint/finger_scan.png").getImage()
-            # img = ImageIcon(resourse_path("assets/images/fingerprint/finger_scan.png")).getImage()
+            # img = ImageIcon("./src/assets/images/fingerprint/finger_scan.png").getImage()
+            img = ImageIcon(resourse_path("assets/images/fingerprint/finger_scan.png")).getImage()
             newimg = img.getScaledInstance(230, 310,  java.awt.Image.SCALE_SMOOTH)
 
             frame.setLayout(None)
@@ -685,7 +659,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                 print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                 clear()                
                 page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))                
-                page.go("/")
+                # page.go("/")
+                navigateEspacio()
             elif(maximo_socios==len(lista_socios_validados)):
                 print("Registra el apatrado ucuando se cumplan los minimo de socios")
                 print("registra un solo apartado")   
@@ -699,7 +674,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                 print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                 clear()
                 page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))
-                page.go("/")
+                # page.go("/")
+                navigateEspacio()
             else:
                 print("entra porq aun no se cumplen el total de socios...")
                 clear()
@@ -736,7 +712,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                     print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                     clear()
                     page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))                
-                    page.go("/")
+                    # page.go("/")
+                    navigateEspacio()
                 elif(maximo_socios==len(lista_socios_validados)):
                     print("Registra el apatrado ucuando se cumplan los minimo de socios")
                     print("registra un solo apartado")   
@@ -750,7 +727,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
                     print_ticket_apartado(descripcion_equipo_,nombre_equipo_,nombre_text,fecha_inicio_equipo_,fecha_fin_equipo_)
                     clear()
                     page.open(ft.SnackBar(ft.Text("Registro apartado con exito",style=ft.TextStyle(size=60,color="#ffffff")),bgcolor="#00695C",width=350,duration=4000))                
-                    page.go("/")
+                    # page.go("/")
+                    navigateEspacio()
                 else:
                     print("entra porq aun no se cumplen el total de socios...")
                     clear()
@@ -778,22 +756,7 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
             # is_valid_face=False#indica que no se esta en proceso de verificacion
             # return  
 
-    def guardar_rostro(frame):
-        global is_valid_face
-
-        # indeica que emepieza la validacion 
-        is_valid_face=True
-
-        is_success, im_buf_arr = cv2.imencode(".jpg", cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY))
-        byte_im = im_buf_arr.tobytes()
-
-        print("inicia verificacion")
-        id=ApartadoDao.save_foto(id_socio,byte_im)        
-        page.open(ft.SnackBar(ft.Text("Se registró correctamente la foto del empleado. Vuelva a intentar checar",style=ft.TextStyle(size=50,color="#000000")),bgcolor="#5a98de",width=350,duration=2500))                
-        time.sleep(3)
-        clear()
-        print("finaliza verificacion")
-        is_valid_face=False 
+ 
 
     imagen_video=ft.Image(src="images/capture_rostro.png",width=360,height=640,border_radius=10)
 
@@ -993,8 +956,8 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
     
     content_=ft.Row([ft.Container(content=ft.Card(content=ft.Column([
         check_dobles,       
-        ft.Text(basket.equipo["descripcion"],size=40),
-        ft.Image(src=basket.equipo["ruta_app"],width=350,fit=ft.ImageFit.COVER),        
+        ft.Text(equipo_["descripcion"],size=40),
+        ft.Image(src=equipo_["ruta_app"],width=330,fit=ft.ImageFit.COVER),        
         ft.Row([
         ft.Text(moment.date(fecha_inicio_equipo_).format("hh:mm"),size=30),
         ft.Text("a",size=20),
@@ -1073,16 +1036,19 @@ def LoginView(page:ft.Page,params:Params,basket:Basket):
     appbar_ = ft.AppBar(
         leading=ft.IconButton(icon=ft.Icons.ARROW_BACK,icon_color="white",
                     icon_size=20,
-                    tooltip="Regresar",on_click=lambda _:  page.go("/equipos/%s/apartado" %id_equipo)),
+                    # tooltip="Regresar",on_click=lambda _:  page.go("/equipos/%s/apartado" %id_equipo)),
+                    # tooltip="Regresar",on_click=lambda _:  fv.view_go("apartado",history_debug=True)),
+                    tooltip="Regresar",on_click=lambda _:  navigateApartados(id_equipo)),
         leading_width=50,
-        title=ft.Text("Validacion de Apartado"),
+        title=ft.Text("Validacion de Apartado",style=ft.TextStyle(color=ft.Colors.WHITE)),
         center_title=False,
-        bgcolor=ft.Colors.GREEN,
+        bgcolor=ft.Colors.BLUE_GREY,
         actions=[],
     )
 
     
 
-    return ft.View("/login",
-        controls=[appbar_,ft.Container(content=ft.Text("informacion de el apartado"),bgcolor=ft.Colors.AMBER),content_]
-    )
+    # return ft.View("/login",
+    #     controls=[appbar_,ft.Container(content=ft.Text("informacion de el apartado"),bgcolor=ft.Colors.AMBER),content_]
+    # )
+    return [appbar_,ft.Container(content=ft.Text("informacion de el apartado"),bgcolor=ft.Colors.AMBER),content_]

@@ -1,8 +1,9 @@
-from mysql_conexion import Conexion
 import time
+from mysql_conexion import Conexion
 import moment
 import datetime as dt
 from uuid import getnode as get_mac
+from promisio import promisify
 
 class ApartadoDao:
 
@@ -34,13 +35,14 @@ class ApartadoDao:
                         FROM espacio_deportivo
                         INNER JOIN imagenes ON espacio_deportivo.cve_imagen = imagenes.cve_imagen
                         INNER JOIN espacio_deportivo_horario ON espacio_deportivo_horario.cve_espacio_deortivo = espacio_deportivo.cve_espacio_deportivo
-                        WHERE espacio_deportivo.estatus = 1 AND espacio_deportivo.terminal IN (1) AND WEEKDAY(NOW()) = espacio_deportivo_horario.dia_semana  AND now() >= espacio_deportivo_horario.hora1 AND now() <= espacio_deportivo_horario.hora2
+                        WHERE espacio_deportivo.estatus = 1 AND espacio_deportivo.terminal IN (1) AND WEEKDAY(NOW()) = espacio_deportivo_horario.dia_semana  AND now() >= espacio_deportivo_horario.hora2 AND now() <= espacio_deportivo_horario.hora3
 
                        """)
                     
         data=cursor.fetchall()
         
         con.close_conexion()
+        
         return data
     
     @staticmethod
@@ -80,6 +82,8 @@ class ApartadoDao:
         data=cursor.fetchall() 
         con.close_conexion()
         # print(data)
+        # time.sleep(6)
+        print("regresa datos")
         return data
     
     @staticmethod
@@ -140,6 +144,7 @@ class ApartadoDao:
                        """,(id_equipo,))
         data=cursor.fetchall() 
         con.close_conexion()
+        # time.sleep(6)
         return data
     
     
@@ -255,13 +260,13 @@ class ApartadoDao:
     @staticmethod
     def registrar_apartado(id_usuario,id_equipo,tiempo,inicio,fin):
    
-        print("en el dao colaborador")
-        print(id_usuario)
-        print(id_equipo)
-        print(tiempo)
-        print(inicio)
-        print(fin)
-        print("en el dao colaborador fin")
+        # print("en el dao colaborador")
+        # print(id_usuario)
+        # print(id_equipo)
+        # print(tiempo)
+        # print(inicio)
+        # print(fin)
+        # print("en el dao colaborador fin")
 
         mac=':'.join(("%012X" % get_mac())[i:i+2] for i in range(0, 12, 2))
 
@@ -291,13 +296,13 @@ class ApartadoDao:
 
     @staticmethod
     def registrar_apartado_dos(id_usuarios,id_equipo,tiempo,inicio,fin):
-        print("en el dao colaborador")        
-        print(id_usuarios)
-        print(id_equipo)
-        print(tiempo)
-        print(inicio)
-        print(fin)
-        print("en el dao colaborador fin")
+        # print("en el dao colaborador")        
+        # print(id_usuarios)
+        # print(id_equipo)
+        # print(tiempo)
+        # print(inicio)
+        # print(fin)
+        # print("en el dao colaborador fin")
 
         mac=':'.join(("%012X" % get_mac())[i:i+2] for i in range(0, 12, 2))
 
